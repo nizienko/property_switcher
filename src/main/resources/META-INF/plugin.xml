@@ -5,7 +5,7 @@
 
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
-    <name>Properties_switcher</name>
+    <name>Property Switcher</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
     <vendor email="support@yourcompany.com" url="https://www.yourcompany.com">YourCompany</vendor>
@@ -25,6 +25,29 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-
+        <fileType
+                name="Properties Template File Type"
+                implementationClass="com.github.nizienko.propertiesSwitcher.fileType.PropertiesTemplateFileType"
+                fieldName="INSTANCE"
+                language="JSON"
+                extensions="propswitch"/>
+        <projectService serviceImplementation="com.github.nizienko.propertiesSwitcher.PropertySwitcherService"/>
+        <statusBarWidgetFactory id="propertySwitcher" implementation="com.github.nizienko.propertiesSwitcher.statusBar.PropertiesStatusBarWidgetFactory" order="first"/>
+        <postStartupActivity implementation="com.github.nizienko.propertiesSwitcher.PropertySwitcherStarter" />
     </extensions>
+    <actions>
+        <action id="com.github.nizienko.propertiesSwitcher.actions.ReloadPropertyTemplatesAction"
+                class="com.github.nizienko.propertiesSwitcher.actions.ReloadPropertyTemplatesAction"
+                text="Reload Property Switcher">
+            <add-to-group group-id="EditorPopupMenu" anchor="first"/>
+        </action>
+        <action id="com.github.nizienko.propertiesSwitcher.actions.SwitchPropertiesAction"
+                class="com.github.nizienko.propertiesSwitcher.actions.SwitchPropertiesAction"
+                text="Switch Properties">
+            <keyboard-shortcut
+                    keymap="$default"
+                    first-keystroke="control 1"
+            />
+        </action>
+    </actions>
 </idea-plugin>

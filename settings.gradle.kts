@@ -5,4 +5,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = "properties_switcher"
+rootProject.name = "Property Switcher"

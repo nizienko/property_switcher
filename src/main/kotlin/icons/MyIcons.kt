@@ -4,7 +4,7 @@ import com.intellij.openapi.util.IconLoader.getIcon
 import javax.swing.Icon
 
 
-object PSIcons {
+object MyIcons {
     @JvmField
-    val ps: Icon = getIcon("/pluginIcon.svg", javaClass)
+    val PS: Icon = getIcon("/META-INF/fileType.svg", javaClass)
 }

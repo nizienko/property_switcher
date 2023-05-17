@@ -10,17 +10,15 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.fileEditor.FileDocumentManager
 
 
-internal class LoadPropertyTemplatesAction : AnAction() {
+internal class ReloadPropertyTemplatesAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
         val editor = e.getData(LangDataKeys.EDITOR) ?: return
-        val virtualFile = e.getData(CommonDataKeys.VIRTUAL_FILE) ?: return
         FileDocumentManager.getInstance().saveDocument(editor.document)
 
         val service = project.service<PropertySwitcherService>()
         service.reload()
     }
-
 
     override fun update(event: AnActionEvent) {
         val virtualFile = event.getData(CommonDataKeys.VIRTUAL_FILE)
