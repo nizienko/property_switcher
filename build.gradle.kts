@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.github.nizienko"
-version = "1.0-SNAPSHOT"
+version = "0.9.0"
 
 repositories {
     mavenCentral()
@@ -34,7 +34,7 @@ tasks {
     }
 
     patchPluginXml {
-        sinceBuild.set("222")
+        sinceBuild.set("231")
         untilBuild.set("232.*")
     }
 

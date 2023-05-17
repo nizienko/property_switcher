@@ -1,11 +1,10 @@
 # Property Switcher
 
-The Property Switcher Plugin is a powerful IntelliJ IDEA plugin designed to simplify working with local property files.
-It provides an intuitive interface and convenient shortcuts to streamline the process of selecting and replacing
-property values. With the plugin, you can easily switch between different property values, saving time and effort when
-configuring your application. Additionally, the plugin offers a customizable status bar widget that displays the values
-of selected properties, allowing for quick reference and monitoring. Experience enhanced productivity and efficiency
-when working with property files using the Property Switcher Plugin.
+The Property Switcher Plugin is a lightweight IntelliJ IDEA plugin that streamlines working with local property files. 
+It offers convenient shortcuts for quickly switching property values, making it ideal for tasks like running tests locally. 
+Additionally, the plugin provides a customizable status bar widget that displays the values of selected properties. 
+Stay informed about important property values at a glance with the Property Switcher Plugin's intuitive widget. 
+Simplify your property file management, boost productivity, and effortlessly replace property values with ease.
 
 ## Installation
 

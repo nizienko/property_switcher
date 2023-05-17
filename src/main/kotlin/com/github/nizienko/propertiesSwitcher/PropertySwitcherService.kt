@@ -6,6 +6,7 @@ import com.github.nizienko.propertiesSwitcher.statusBar.SwitcherWidget.Companion
 import com.google.gson.Gson
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectLocator
 import com.intellij.openapi.project.guessProjectDir
@@ -180,7 +181,17 @@ internal class SwitchablePropertyFile(val propertyTemplate: PropertiesTemplate, 
 
     }
     fun updateParameter(name: String, value: String) {
-        saveProperties(readProperties().toMutableMap().apply { put(name, value) })
+        val documentManager = FileDocumentManager.getInstance()
+        val document = documentManager.getDocument(propertyFile)?: return
+        val content = document.text
+        val updatedContent = content.replace(("$name=.*").toRegex(), "$name=$value")
+        ApplicationManager.getApplication().invokeLater {
+            ApplicationManager.getApplication().runWriteAction {
+                document.setText(updatedContent)
+                documentManager.saveDocument(document)
+                notifyChanges()
+            }
+        }
     }
 }
 
