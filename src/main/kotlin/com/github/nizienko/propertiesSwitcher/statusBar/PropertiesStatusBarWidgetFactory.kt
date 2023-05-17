@@ -14,7 +14,7 @@ import kotlinx.coroutines.runBlocking
 import java.awt.Component
 import java.awt.event.MouseEvent
 
-internal class PropertiesStatusBarWidgetFactory: StatusBarWidgetFactory {
+internal class PropertiesStatusBarWidgetFactory : StatusBarWidgetFactory {
     override fun getId(): String = "propertySwitcher"
 
     override fun getDisplayName(): String = "Property Switcher"
@@ -36,10 +36,11 @@ internal class PropertiesStatusBarWidgetFactory: StatusBarWidgetFactory {
     }
 }
 
-internal class SwitcherWidget(private val project: Project): StatusBarWidget {
+internal class SwitcherWidget(private val project: Project) : StatusBarWidget {
     companion object {
         const val ID = "Switcher Widget"
     }
+
     override fun dispose() {
         Disposer.dispose(this)
     }

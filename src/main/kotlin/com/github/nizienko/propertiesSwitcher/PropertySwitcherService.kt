@@ -77,15 +77,25 @@ internal class PropertySwitcherService(private val project: Project) {
                         append("\n")
                     }
                 }
-                val latch = CountDownLatch(1)
-                ApplicationManager.getApplication().invokeLater {
+                if (ApplicationManager.getApplication().isDispatchThread) {
                     ApplicationManager.getApplication().runWriteAction {
                         val newFile = parentDir.createChildData(this, filePath.substringAfterLast("/"))
                         VfsUtil.saveText(newFile, content)
-                        latch.countDown()
                     }
+                } else {
+                    val latch = CountDownLatch(1)
+                    ApplicationManager.getApplication().invokeLater {
+                        ApplicationManager.getApplication().runWriteAction {
+                            try {
+                                val newFile = parentDir.createChildData(this, filePath.substringAfterLast("/"))
+                                VfsUtil.saveText(newFile, content)
+                            } finally {
+                                latch.countDown()
+                            }
+                        }
+                    }
+                    latch.await()
                 }
-                latch.await()
             }
             return fileSystem.findFileByPath(baseDir.path + "/" + filePath)
                 ?: throw IllegalStateException("Failed to create Property file for ${data.propertyFile}")

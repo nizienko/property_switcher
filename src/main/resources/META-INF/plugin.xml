@@ -8,14 +8,13 @@
     <name>Property Switcher</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
-    <vendor email="support@yourcompany.com" url="https://www.yourcompany.com">YourCompany</vendor>
+    <vendor email="nizienko@outlook.com" url="https://github.com/nizienko/property_switcher">github</vendor>
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
     <description><![CDATA[
-    Enter short description for your plugin here.<br>
-    <em>most HTML tags may be used</em>
+    The Property Switcher Plugin is a powerful IntelliJ IDEA plugin designed to simplify working with local property files. It provides an intuitive interface and convenient shortcuts to streamline the process of selecting and replacing property values. With the plugin, you can easily switch between different property values, saving time and effort when configuring your application. Additionally, the plugin offers a customizable status bar widget that displays the values of selected properties, allowing for quick reference and monitoring. Experience enhanced productivity and efficiency when working with property files using the Property Switcher Plugin.
   ]]></description>
 
     <!-- Product and plugin compatibility requirements.
@@ -32,8 +31,10 @@
                 language="JSON"
                 extensions="propswitch"/>
         <projectService serviceImplementation="com.github.nizienko.propertiesSwitcher.PropertySwitcherService"/>
-        <statusBarWidgetFactory id="propertySwitcher" implementation="com.github.nizienko.propertiesSwitcher.statusBar.PropertiesStatusBarWidgetFactory" order="first"/>
-        <postStartupActivity implementation="com.github.nizienko.propertiesSwitcher.PropertySwitcherStarter" />
+        <statusBarWidgetFactory id="propertySwitcher"
+                                implementation="com.github.nizienko.propertiesSwitcher.statusBar.PropertiesStatusBarWidgetFactory"
+                                order="first"/>
+        <postStartupActivity implementation="com.github.nizienko.propertiesSwitcher.PropertySwitcherStarter"/>
     </extensions>
     <actions>
         <action id="com.github.nizienko.propertiesSwitcher.actions.ReloadPropertyTemplatesAction"
