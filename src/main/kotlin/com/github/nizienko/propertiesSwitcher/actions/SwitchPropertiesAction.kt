@@ -8,6 +8,9 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.ui.popup.PopupStep
 import com.intellij.openapi.ui.popup.util.BaseListPopupStep
+import com.intellij.vcs.commit.NonModalCommitPanel.Companion.showAbove
+import java.awt.Component
+import javax.swing.JComponent
 
 internal class SwitchPropertiesAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
@@ -15,7 +18,12 @@ internal class SwitchPropertiesAction : AnAction() {
         val files = service.getSwitchableFiles()
         val popupStep = createSwitchableFilesPopup(files)
         val popup = JBPopupFactory.getInstance().createListPopup(popupStep)
-        popup.showInBestPositionFor(e.dataContext)
+        val source = e.inputEvent.source
+        if (source is JComponent) {
+            popup.showAbove(source)
+        } else {
+            popup.showInBestPositionFor(e.dataContext)
+        }
     }
 
     override fun update(e: AnActionEvent) {
@@ -40,7 +48,7 @@ private fun createSwitchableFilesPopup(
         }
 
         override fun getTextFor(value: SwitchablePropertyFile): String {
-            return value.propertyTemplate.propertyFile
+            return value.propertyFile.name
         }
     }
 } else {
@@ -50,7 +58,7 @@ private fun createSwitchableFilesPopup(
 
 private fun createPropsPopup(
     chosenFile: SwitchablePropertyFile
-) = object : BaseListPopupStep<Prop>("Property", chosenFile.propertyTemplate.properties) {
+) = object : BaseListPopupStep<Prop>(chosenFile.propertyFile.name, chosenFile.properties) {
     override fun isSpeedSearchEnabled(): Boolean {
         return true
     }
@@ -68,10 +76,10 @@ private fun createPropsPopup(
     }
 }
 
-private fun createValuePopup(
+internal fun createValuePopup(
     chosenFile: SwitchablePropertyFile,
     chosenProp: Prop
-) = object : BaseListPopupStep<String>("Value", chosenProp.options) {
+) = object : BaseListPopupStep<String>(chosenProp.name, chosenProp.options) {
     override fun isSpeedSearchEnabled(): Boolean {
         return true
     }

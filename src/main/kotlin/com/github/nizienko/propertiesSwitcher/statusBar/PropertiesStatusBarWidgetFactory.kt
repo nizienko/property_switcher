@@ -56,7 +56,7 @@ internal class SwitcherWidget(private val project: Project) : StatusBarWidget {
             return Consumer {
                 runBlocking {
                     val dataContext = DataManager.getInstance().getDataContext(it.component)
-                    val event = AnActionEvent.createFromDataContext("", null, dataContext)
+                    val event = AnActionEvent.createFromInputEvent(it, "", null, dataContext)
                     ActionManager.getInstance()
                         .getAction("com.github.nizienko.propertiesSwitcher.actions.SwitchPropertiesAction")
                         .actionPerformed(event)

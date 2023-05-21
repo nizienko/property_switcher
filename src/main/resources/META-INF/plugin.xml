@@ -51,8 +51,11 @@ Simplify your property file management, boost productivity, and effortlessly rep
                 text="Switch Properties">
             <keyboard-shortcut
                     keymap="$default"
-                    first-keystroke="control 1"
+                    first-keystroke="control shift 1"
             />
+        </action>
+        <action id="Create.PropSwitch" class="com.github.nizienko.propertiesSwitcher.actions.CreateNewPropSwitchAction">
+            <add-to-group group-id="NewGroup"/>
         </action>
     </actions>
 </idea-plugin>

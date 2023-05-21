@@ -17,6 +17,7 @@ import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.openapi.wm.impl.status.widget.StatusBarWidgetsManager
+import kotlinx.coroutines.flow.merge
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -32,14 +33,12 @@ internal class PropertySwitcherStarter : ProjectActivity {
 internal class PropertySwitcherService(private val project: Project) {
     private val switchableFiles: MutableList<SwitchablePropertyFile> = Collections.synchronizedList(mutableListOf())
 
-    fun reloadFile(file: VirtualFile) {
+    private fun loadFile(file: VirtualFile) {
         if (file.fileType == PropertiesTemplateFileType.INSTANCE) {
             parseJsonFile(file)?.let { template ->
                 val propertyFile = findOrCreateFileIfNotExist(template)
-                switchableFiles.firstOrNull { it.propertyTemplate.propertyFile == template.propertyFile }?.let {
-                    switchableFiles.remove(it)
-                }
-                switchableFiles.add(SwitchablePropertyFile(template, propertyFile))
+                switchableFiles.firstOrNull { it.propertyFile == propertyFile }?.addTemplate(template)
+                    ?: switchableFiles.add(SwitchablePropertyFile(template, propertyFile))
             }
             updateWidget()
         }
@@ -48,7 +47,7 @@ internal class PropertySwitcherService(private val project: Project) {
     fun reload() {
         switchableFiles.clear()
         PropertiesTemplateFileType.findAllFiles(project).forEach { file ->
-            reloadFile(file)
+            loadFile(file)
         }
     }
 
@@ -124,24 +123,37 @@ internal class PropertySwitcherService(private val project: Project) {
     fun getStatusBarValues(): String {
         return getSwitchableFiles().flatMap { file ->
             val params = file.readProperties()
-            file.propertyTemplate.properties.filter { it.showInStatusBar ?: false }
-                .mapNotNull { params[it.name] }
+            file.properties.filter { it.showInStatusBar ?: false }.mapNotNull { params[it.name] }
 
         }.joinToString(" ") { it }
     }
-     fun updateWidget() {
-         project.service<StatusBarWidgetsManager>().updateWidget(PropertiesStatusBarWidgetFactory::class.java)
-         val statusBar = WindowManager.getInstance().getStatusBar(project)
-         statusBar?.updateWidget(ID)
-     }
+
+    fun updateWidget() {
+        project.service<StatusBarWidgetsManager>().updateWidget(PropertiesStatusBarWidgetFactory::class.java)
+        val statusBar = WindowManager.getInstance().getStatusBar(project)
+        statusBar?.updateWidget(ID)
+    }
 }
 
-internal class SwitchablePropertyFile(val propertyTemplate: PropertiesTemplate, private val propertyFile: VirtualFile) {
+internal class SwitchablePropertyFile(
+    propertyTemplates: PropertiesTemplate,
+    val propertyFile: VirtualFile
+) {
+    private val templates = mutableListOf<PropertiesTemplate>()
+
     init {
-        addMissingProperties()
+        addTemplate(propertyTemplates)
     }
 
-    private fun addMissingProperties() {
+    fun addTemplate(template: PropertiesTemplate) {
+        templates.add(template)
+        addMissingProperties(template)
+    }
+
+    val properties: List<Prop>
+        get() = templates.flatMap { it.properties }
+
+    private fun addMissingProperties(propertyTemplate: PropertiesTemplate) {
         val existedProperties = readProperties().toMutableMap()
         propertyTemplate.properties.forEach {
             if (existedProperties.keys.contains(it.name).not()) {
@@ -150,6 +162,7 @@ internal class SwitchablePropertyFile(val propertyTemplate: PropertiesTemplate, 
         }
         saveProperties(existedProperties)
     }
+
     private fun notifyChanges() {
         ProjectLocator.getInstance().guessProjectForFile(propertyFile)?.switcher()?.updateWidget()
     }
@@ -180,9 +193,10 @@ internal class SwitchablePropertyFile(val propertyTemplate: PropertiesTemplate, 
         }
 
     }
+
     fun updateParameter(name: String, value: String) {
         val documentManager = FileDocumentManager.getInstance()
-        val document = documentManager.getDocument(propertyFile)?: return
+        val document = documentManager.getDocument(propertyFile) ?: return
         val content = document.text
         val updatedContent = content.replace(("$name=.*").toRegex(), "$name=$value")
         ApplicationManager.getApplication().invokeLater {
@@ -196,14 +210,11 @@ internal class SwitchablePropertyFile(val propertyTemplate: PropertiesTemplate, 
 }
 
 internal data class PropertiesTemplate(
-    val propertyFile: String,
-    val properties: List<Prop>
+    val propertyFile: String, val properties: List<Prop>
 )
 
 internal data class Prop(
-    val name: String,
-    val options: List<String>,
-    val showInStatusBar: Boolean?
+    val name: String, val options: List<String>, val showInStatusBar: Boolean?
 )
 
 internal fun Project.switcher() = service<PropertySwitcherService>()

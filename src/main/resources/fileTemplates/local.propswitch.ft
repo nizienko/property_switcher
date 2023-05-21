@@ -1,0 +1,23 @@
+{
+  "propertyFile": "local.properties",
+  "properties": [
+    {
+      "name": "property_1",
+      "options": [
+        "value_1",
+        "value_2",
+        "value_3"
+      ],
+      "showInStatusBar": false
+    },
+    {
+      "name": "property_2",
+      "options": [
+        "value_1",
+        "value_2",
+        "value_3"
+      ],
+      "showInStatusBar": true
+    }
+  ]
+}

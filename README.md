@@ -55,7 +55,7 @@ Define the properties and their options in the JSON format. Here's an example:
 
  - Save the JSON specification file with 'Reload Property Switcher' in the editor context menu(mouse right click inside the editor)
 
- - Press `Command + 1` (or equivalent) to invoke the Property Switcher Plugin from anywhere in IntelliJ IDEA.
+ - Press `Shift + Command + 1` (or equivalent) to invoke the Property Switcher Plugin from anywhere in IntelliJ IDEA.
  - In the popup menu, select the desired property from the available options.
  - Choose the new value for the selected property.
  - Press Enter to replace the original property value with the chosen value in the respective property file.
