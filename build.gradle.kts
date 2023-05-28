@@ -9,6 +9,8 @@ version = "0.9.0"
 
 repositories {
     mavenCentral()
+    maven("https://packages.jetbrains.team/maven/p/ij/intellij-dependencies")
+
 }
 
 sourceSets["main"].java.srcDirs("src/main/gen")
@@ -46,5 +48,28 @@ tasks {
 
     publishPlugin {
         token.set(System.getenv("PUBLISH_TOKEN"))
+    }
+}
+val robotVersion = "0.11.18"
+dependencies {
+    testImplementation(platform("org.junit:junit-bom:5.9.3"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("com.intellij.remoterobot:remote-robot:$robotVersion")
+    testImplementation("com.intellij.remoterobot:remote-fixtures:$robotVersion")
+    testImplementation("com.squareup.retrofit2:retrofit:2.9.0")
+}
+
+tasks.downloadRobotServerPlugin {
+    version.set(robotVersion)
+}
+
+tasks.runIdeForUiTests {
+    systemProperty("robot-server.port", "8082")
+}
+
+tasks.test {
+    useJUnitPlatform()
+    testLogging {
+        events("passed", "skipped", "failed")
     }
 }

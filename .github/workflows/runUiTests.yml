@@ -1,0 +1,67 @@
+name: Run UI Tests
+on: push
+
+jobs:
+  run-ui-test:
+    name: run tests
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            runIde: |
+              export DISPLAY=:99.0
+              Xvfb -ac :99 -screen 0 1920x1080x24 &
+              sleep 10
+              mkdir -p ui-test-example/build/reports
+              ./gradlew :ui-test-example:runIdeForUiTests > ui-test-example/build/reports/idea.log &
+            runTests: |
+              export DISPLAY=:99.0
+              ./gradlew :test
+            url: http://127.0.0.1:8082
+            reportName: ui-test-fails-report-linux
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3.5.2
+
+      - name: Setup Java
+        uses: actions/setup-java@v3.10.0
+        with:
+          distribution: zulu
+          java-version: 17
+
+      - name: Setup FFmpeg
+        uses: FedericoCarboni/setup-ffmpeg@v2
+        with:
+          # Not strictly necessary, but it may prevent rate limit
+          # errors especially on GitHub-hosted macos machines.
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clean
+        run: ./gradlew :ui-test-example:clean
+
+      - name: Run Idea
+        run: ${{ matrix.runIde }}
+
+      - name: Wait for Idea started
+        uses: jtalk/url-health-check-action@v3
+        with:
+          url: ${{ matrix.url }}
+          max-attempts: 15
+          retry-delay: 30s
+
+      - name: Run tests
+        run: ${{ matrix.runTests }}
+
+      - name: Move video
+        if: ${{ failure() }}
+        run: mv ui-test-example/video ui-test-example/build/reports
+
+      - name: Save fails report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.reportName }}
+          path: |
+            ui-test-example/build/reports

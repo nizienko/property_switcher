@@ -65,7 +65,9 @@ internal class SwitcherWidget(private val project: Project) : StatusBarWidget {
         }
 
         override fun getText(): String {
-            return project.switcher().getStatusBarValues()
+            return project.switcher().getStatusBarValues().let {
+                if (it.length > 36) it.substring(0, 34) + "..." else it
+            }
         }
 
         override fun getAlignment(): Float {
