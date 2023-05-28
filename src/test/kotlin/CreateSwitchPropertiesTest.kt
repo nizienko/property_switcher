@@ -19,7 +19,7 @@ class CreateSwitchPropertiesTest {
     fun createPropSwitchFileTest() {
         step("Create project") {
             robot.welcomeFrame {
-                component(byXpath("//div[@accessiblename='New Project' and @class='MainButton']"))
+                component(byXpath("//div[(@accessiblename='New Project' and @class='MainButton') or @defaulticon='createNewProjectTab.svg']"))
                     .click()
                 component(byXpath("//div[@class='ProjectTypeListWithSearch']"))
                     .findText("New Project")
