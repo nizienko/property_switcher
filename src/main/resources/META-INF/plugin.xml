@@ -34,11 +34,13 @@ Simplify your property file management, boost productivity, and effortlessly rep
                 fieldName="INSTANCE"
                 language="JSON"
                 extensions="propswitch"/>
-        <projectService serviceImplementation="com.github.nizienko.propertiesSwitcher.PropertySwitcherService"/>
+
         <statusBarWidgetFactory id="propertySwitcher"
                                 implementation="com.github.nizienko.propertiesSwitcher.statusBar.PropertiesStatusBarWidgetFactory"
                                 order="first"/>
         <postStartupActivity implementation="com.github.nizienko.propertiesSwitcher.PropertySwitcherStarter"/>
+        <notificationGroup id="Property Switcher Notification Group"
+                           displayType="BALLOON"/>
     </extensions>
     <actions>
         <action id="com.github.nizienko.propertiesSwitcher.actions.ReloadPropertyTemplatesAction"

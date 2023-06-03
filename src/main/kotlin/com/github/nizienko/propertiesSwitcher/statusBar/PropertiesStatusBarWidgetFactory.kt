@@ -50,7 +50,7 @@ internal class SwitcherWidget(private val project: Project) : StatusBarWidget {
     }
 
     override fun getPresentation() = object : StatusBarWidget.TextPresentation {
-        override fun getTooltipText(): String = "Properties"
+        override fun getTooltipText(): String = project.switcher().getStatusBarToolTip()
 
         override fun getClickConsumer(): Consumer<MouseEvent>? {
             return Consumer {
@@ -65,13 +65,13 @@ internal class SwitcherWidget(private val project: Project) : StatusBarWidget {
         }
 
         override fun getText(): String {
-            return project.switcher().getStatusBarValues().let {
+            return project.switcher().getStatusBarLabel().let {
                 if (it.length > 36) it.substring(0, 34) + "..." else it
             }
         }
 
         override fun getAlignment(): Float {
-            return Component.LEFT_ALIGNMENT
+            return Component.CENTER_ALIGNMENT
         }
     }
 }

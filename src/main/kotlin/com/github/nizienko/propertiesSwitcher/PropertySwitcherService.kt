@@ -4,7 +4,11 @@ import com.github.nizienko.propertiesSwitcher.fileType.PropertiesTemplateFileTyp
 import com.github.nizienko.propertiesSwitcher.statusBar.PropertiesStatusBarWidgetFactory
 import com.github.nizienko.propertiesSwitcher.statusBar.SwitcherWidget.Companion.ID
 import com.google.gson.Gson
+import com.intellij.notification.Notification
+import com.intellij.notification.NotificationType
+import com.intellij.notification.Notifications
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
@@ -17,7 +21,7 @@ import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.openapi.wm.impl.status.widget.StatusBarWidgetsManager
-import kotlinx.coroutines.flow.merge
+import com.intellij.testFramework.utils.vfs.getFile
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -30,6 +34,7 @@ internal class PropertySwitcherStarter : ProjectActivity {
     }
 }
 
+@Service(Service.Level.PROJECT)
 internal class PropertySwitcherService(private val project: Project) {
     private val switchableFiles: MutableList<SwitchablePropertyFile> = Collections.synchronizedList(mutableListOf())
 
@@ -104,6 +109,7 @@ internal class PropertySwitcherService(private val project: Project) {
 
     fun getSwitchableFiles() = switchableFiles.toList()
 
+    @Suppress("SENSELESS_COMPARISON")
     private fun parseJsonFile(file: VirtualFile): PropertiesTemplate? {
         val content = VfsUtilCore.loadText(file)
         val inputStream = file.inputStream
@@ -111,8 +117,33 @@ internal class PropertySwitcherService(private val project: Project) {
 
         val gson = Gson()
         return try {
-            gson.fromJson(content, PropertiesTemplate::class.java)
+            gson.fromJson(content, PropertiesTemplate::class.java).apply {
+                require(propertyFile != null) {
+                    "propertyFile value is missing"
+                }
+                require(properties != null) {
+                    "properties are missing"
+                }
+                properties.forEach {
+                    require(it.name != null) {
+                        "name is missing"
+                    }
+                    require(it.options != null) {
+                        "options are missing for ${it.name} property"
+                    }
+                    require(it.options.isNotEmpty()) {
+                        "${it.name} options are empty"
+                    }
+                }
+            }
         } catch (e: Exception) {
+            Notifications.Bus.notify(
+                Notification(
+                    "Property Switcher Notification Group",
+                    "Failed to load ${file.name}:\n${e.message}",
+                    NotificationType.ERROR
+                ), project
+            )
             null
         } finally {
             reader.close()
@@ -120,7 +151,14 @@ internal class PropertySwitcherService(private val project: Project) {
         }
     }
 
-    fun getStatusBarValues(): String {
+    fun getStatusBarToolTip(): String {
+        return getSwitchableFiles().flatMap { file ->
+            val params = file.readProperties()
+            file.properties.map { it.name + ":" + params[it.name] }
+        }.joinToString("; ") { it }
+    }
+
+    fun getStatusBarLabel(): String {
         return getSwitchableFiles().flatMap { file ->
             val params = file.readProperties()
             file.properties.filter { it.showInStatusBar ?: false }.mapNotNull { params[it.name] }
