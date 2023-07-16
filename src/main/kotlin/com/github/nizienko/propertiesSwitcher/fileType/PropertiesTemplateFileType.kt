@@ -23,7 +23,6 @@ internal class PropertiesTemplateFileType : LanguageFileType(JsonLanguage.INSTAN
                     GlobalSearchScope.allScope(project)
                 ).toList()
             }
-
         }
     }
 
