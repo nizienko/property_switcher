@@ -15,13 +15,9 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectLocator
 import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.startup.ProjectActivity
-import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.openapi.vfs.VfsUtil
-import com.intellij.openapi.vfs.VfsUtilCore
-import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.*
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.openapi.wm.impl.status.widget.StatusBarWidgetsManager
-import com.intellij.testFramework.utils.vfs.getFile
 import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -192,13 +188,14 @@ internal class SwitchablePropertyFile(
         get() = templates.flatMap { it.properties }
 
     private fun addMissingProperties(propertyTemplate: PropertiesTemplate) {
-        val existedProperties = readProperties().toMutableMap()
+        val existedProperties = readProperties()
+        val propertiesToAdd = mutableMapOf<String, String>()
         propertyTemplate.properties.forEach {
             if (existedProperties.keys.contains(it.name).not()) {
-                existedProperties[it.name] = it.options.last()
+                propertiesToAdd[it.name] = it.options.first()
             }
         }
-        saveProperties(existedProperties)
+        addProperties(propertiesToAdd)
     }
 
     private fun notifyChanges() {
@@ -214,8 +211,11 @@ internal class SwitchablePropertyFile(
             }
     }
 
-    private fun saveProperties(newProperties: Map<String, String>) {
+    private fun addProperties(newProperties: Map<String, String>) {
         val content = buildString {
+            val origin = propertyFile.readText()
+            append(origin)
+            if (origin.endsWith("\n").not()) append("\n")
             newProperties.forEach { (k, v) ->
                 append(k)
                 append("=")
@@ -236,7 +236,19 @@ internal class SwitchablePropertyFile(
         val documentManager = FileDocumentManager.getInstance()
         val document = documentManager.getDocument(propertyFile) ?: return
         val content = document.text
-        val updatedContent = content.replace(("$name=.*").toRegex(), "$name=$value")
+
+        val currentValue = Regex(" *($name) *= *(.*)").find(content)?.groupValues?.get(2)
+            ?: throw IllegalStateException("Can't find $name parameter in ${propertyFile.name}")
+
+        val currentComment = currentValue.takeIf {
+            it.contains("#")
+        }?.substringAfter("#")
+
+        val newValue = currentComment?.let { "$value #$currentComment" }
+            ?: value
+
+        val updatedContent = content.replace((" *($name) *= *(.*)").toRegex(), "$1=$newValue")
+
         ApplicationManager.getApplication().invokeLater {
             ApplicationManager.getApplication().runWriteAction {
                 document.setText(updatedContent)
