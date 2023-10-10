@@ -40,6 +40,7 @@ class CreateSwitchPropertiesTest {
                 }
                 popup().findText("Property Switcher")
                     .click()
+                waitFor { popup().hasText("New Property Switcher") }
                 keyboard {
                     enterText("local")
                     enter()
@@ -69,8 +70,10 @@ class CreateSwitchPropertiesTest {
 
                 step("Switch properties") {
                     widget().click()
-                    popup().findText("property_1").moveMouse()
-                    popup().popup().findText("value_1").click()
+                    popup().apply {
+                        findText("property_1").moveMouse()
+                        popup().findText("value_1").click()
+                    }
                 }
 
                 assert(
@@ -83,8 +86,10 @@ class CreateSwitchPropertiesTest {
 
                 step("Switch properties") {
                     widget().click()
-                    popup().findText("property_2").moveMouse()
-                    popup().popup().findText("value_2").click()
+                    popup().apply {
+                        findText("property_2").moveMouse()
+                        popup().findText("value_2").click()
+                    }
                 }
 
                 assert(

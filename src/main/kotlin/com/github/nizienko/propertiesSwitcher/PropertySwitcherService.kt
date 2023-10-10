@@ -22,6 +22,7 @@ import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 import java.util.*
 import java.util.concurrent.CountDownLatch
+import kotlin.text.Regex.Companion.escapeReplacement
 
 
 internal class PropertySwitcherStarter : ProjectActivity {
@@ -148,10 +149,18 @@ internal class PropertySwitcherService(private val project: Project) {
     }
 
     fun getStatusBarToolTip(): String {
+        // use html for multiline tooltip
         return getSwitchableFiles().flatMap { file ->
             val params = file.readProperties()
-            file.properties.map { it.name + ":" + params[it.name] }
-        }.joinToString("; ") { it }
+            file.properties.map {
+                val n = it.name.replace("&", "&amp;").replace("<", "&lt;")
+                val v = params[it.name].toString().replace("&", "&amp;").replace("<", "&lt;")
+                    .removeNewLinesForPropertyFile()
+                // use <pre> for values to not lost spaces/line feeds.
+                // use bold for property names to not mix with multiline values.
+                "<b>$n: </b><pre>$v</pre></br>"
+            }
+        }.joinToString("", "<html>", "</html>") { it }
     }
 
     fun getStatusBarLabel(): String {
@@ -203,10 +212,12 @@ internal class SwitchablePropertyFile(
     }
 
     internal fun readProperties(): Map<String, String> {
-        return String(propertyFile.contentsToByteArray(), StandardCharsets.UTF_8).split("\n")
+        return String(propertyFile.contentsToByteArray(), StandardCharsets.UTF_8)
+            .toOneLine()
+            .split("\n")
             .filter { it.contains("=") && it.length > 3 }.associate {
                 val key = it.substringBefore("=")
-                val value = it.substringAfter("=", "")
+                val value = it.substringAfter("=", "").toMultiLine().removeComments()
                 key to value
             }
     }
@@ -219,7 +230,7 @@ internal class SwitchablePropertyFile(
             newProperties.forEach { (k, v) ->
                 append(k)
                 append("=")
-                append(v)
+                append(v.setNewLinesForPropertyFile())
                 append("\n")
             }
         }
@@ -235,7 +246,7 @@ internal class SwitchablePropertyFile(
     fun updateParameter(name: String, value: String) {
         val documentManager = FileDocumentManager.getInstance()
         val document = documentManager.getDocument(propertyFile) ?: return
-        val content = document.text
+        val content = document.text.toOneLine()
 
         val currentValue = Regex(" *($name) *= *(.*)").find(content)?.groupValues?.get(2)
             ?: throw IllegalStateException("Can't find $name parameter in ${propertyFile.name}")
@@ -244,10 +255,11 @@ internal class SwitchablePropertyFile(
             it.contains("#")
         }?.substringAfter("#")
 
-        val newValue = currentComment?.let { "$value #$currentComment" }
-            ?: value
+        val newValue = currentComment?.let { "${value.setNewLinesForPropertyFile()} #$currentComment" }
+            ?: value.setNewLinesForPropertyFile()
 
-        val updatedContent = content.replace((" *($name) *= *(.*)").toRegex(), "$1=$newValue")
+        val updatedContent = content.replace((" *($name) *= *(.*)").toRegex(), "$1=${escapeReplacement(newValue)}")
+            .toMultiLine()
 
         ApplicationManager.getApplication().invokeLater {
             ApplicationManager.getApplication().runWriteAction {
@@ -268,3 +280,12 @@ internal data class Prop(
 )
 
 internal fun Project.switcher() = service<PropertySwitcherService>()
+
+internal const val MULTILINE_PLACEHOLDER = "%MULTILINE_PLACEHOLDER%"
+internal const val MULTILINE_CHAR = "\\\n"
+
+internal fun String.toOneLine(): String = replace(MULTILINE_CHAR, MULTILINE_PLACEHOLDER)
+internal fun String.toMultiLine(): String = replace(MULTILINE_PLACEHOLDER, MULTILINE_CHAR)
+internal fun String.setNewLinesForPropertyFile(): String = replace("\n", MULTILINE_CHAR)
+internal fun String.removeNewLinesForPropertyFile(): String = replace(MULTILINE_CHAR, "\n")
+internal fun String.removeComments(): String = substringBefore("#").trim()

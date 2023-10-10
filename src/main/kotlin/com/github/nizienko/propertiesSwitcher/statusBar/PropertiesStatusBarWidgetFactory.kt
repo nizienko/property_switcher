@@ -66,7 +66,9 @@ internal class SwitcherWidget(private val project: Project) : StatusBarWidget {
 
         override fun getText(): String {
             return project.switcher().getStatusBarLabel().let {
-                if (it.length > 36) it.substring(0, 34) + "..." else it
+                if (it.isEmpty()) "PropSwitcher"
+                else if (it.length > 48) it.substring(0, 45) + "..."
+                else it
             }
         }
 
