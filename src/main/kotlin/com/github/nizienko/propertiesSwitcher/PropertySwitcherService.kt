@@ -212,14 +212,8 @@ internal class SwitchablePropertyFile(
     }
 
     internal fun readProperties(): Map<String, String> {
-        return String(propertyFile.contentsToByteArray(), StandardCharsets.UTF_8)
-            .toOneLine()
-            .split("\n")
-            .filter { it.contains("=") && it.length > 3 }.associate {
-                val key = it.substringBefore("=")
-                val value = it.substringAfter("=", "").toMultiLine().removeComments()
-                key to value
-            }
+        val properties = Properties().apply { load(propertyFile.inputStream) }
+        return properties.map { it.key as String to it.value as String }.toMap()
     }
 
     private fun addProperties(newProperties: Map<String, String>) {
@@ -248,18 +242,29 @@ internal class SwitchablePropertyFile(
         val document = documentManager.getDocument(propertyFile) ?: return
         val content = document.text.toOneLine()
 
-        val currentValue = Regex(" *($name) *= *(.*)").find(content)?.groupValues?.get(2)
-            ?: throw IllegalStateException("Can't find $name parameter in ${propertyFile.name}")
+        val currentValue = Regex(" *($name) *[=: ] *(.*)").find(content)?.groupValues?.get(2)
 
-        val currentComment = currentValue.takeIf {
+        val currentComment = currentValue?.takeIf {
             it.contains("#")
         }?.substringAfter("#")
 
         val newValue = currentComment?.let { "${value.setNewLinesForPropertyFile()} #$currentComment" }
             ?: value.setNewLinesForPropertyFile()
 
-        val updatedContent = content.replace((" *($name) *= *(.*)").toRegex(), "$1=${escapeReplacement(newValue)}")
-            .toMultiLine()
+        val updatedContent = if (currentValue != null) {
+            content.replace((" *($name) *([=: ]) *(.*)").toRegex(), "$1$2${escapeReplacement(newValue)}")
+                .toMultiLine()
+        } else {
+            if (content.contains(name)) {
+                content.replace(name, "$name=${escapeReplacement(newValue)}")
+            } else {
+                buildString {
+                    append(content)
+                    append("\n")
+                    append("$name=${escapeReplacement(newValue)}")
+                }
+            }
+        }
 
         ApplicationManager.getApplication().invokeLater {
             ApplicationManager.getApplication().runWriteAction {
