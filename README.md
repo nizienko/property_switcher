@@ -17,7 +17,7 @@ Simplify your property file management, boost productivity, and effortlessly rep
 
 ## Usage
 
-Create a new file with the `.propswitch` extension in your project.
+Create a new file with the `.propswitch` extension in your project [New -> Property Switcher].
 Define the properties and their options in the JSON format. Here's an example:
 
 ```json
