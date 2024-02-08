@@ -13,9 +13,13 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectLocator
+import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.project.guessProjectDir
+import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.openapi.vfs.*
+import com.intellij.openapi.vfs.newvfs.BulkFileListener
+import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.openapi.wm.impl.status.widget.StatusBarWidgetsManager
 import java.io.InputStreamReader
@@ -28,6 +32,23 @@ import kotlin.text.Regex.Companion.escapeReplacement
 internal class PropertySwitcherStarter : ProjectActivity {
     override suspend fun execute(project: Project) {
         project.switcher().reload()
+    }
+}
+
+internal class PropertySwitcherListener : BulkFileListener {
+    override fun after(events: MutableList<out VFileEvent>) {
+        ProjectManager.getInstance().openProjects
+                .filter { project ->
+                    events.any { event ->
+                        if (event.file != null) {
+                            project.switcher().isPropertyFile(event.file!!) ||
+                                    (event.file!!.fileType == PropertiesTemplateFileType.INSTANCE
+                                            && ProjectRootManager.getInstance(project).fileIndex.isInContent(event.file!!))
+                        } else {
+                            false
+                        }
+                    }
+                }.forEach { it.switcher().reload() }
     }
 }
 
@@ -105,6 +126,10 @@ internal class PropertySwitcherService(private val project: Project) {
     }
 
     fun getSwitchableFiles() = switchableFiles.toList()
+
+    fun isPropertyFile(file: VirtualFile): Boolean {
+        return switchableFiles.any { it.propertyFile == file }
+    }
 
     @Suppress("SENSELESS_COMPARISON")
     private fun parseJsonFile(file: VirtualFile): PropertiesTemplate? {
@@ -204,7 +229,9 @@ internal class SwitchablePropertyFile(
                 propertiesToAdd[it.name] = it.options.first()
             }
         }
-        addProperties(propertiesToAdd)
+        if(propertiesToAdd.any()) {
+            addProperties(propertiesToAdd)
+        }
     }
 
     private fun notifyChanges() {
