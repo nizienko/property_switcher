@@ -60,4 +60,8 @@ Simplify your property file management, boost productivity, and effortlessly rep
             <add-to-group group-id="NewGroup"/>
         </action>
     </actions>
+    <applicationListeners>
+        <listener class="com.github.nizienko.propertiesSwitcher.PropertySwitcherListener"
+                  topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
+    </applicationListeners>
 </idea-plugin>
