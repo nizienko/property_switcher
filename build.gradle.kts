@@ -50,7 +50,7 @@ tasks {
         token.set(System.getenv("PUBLISH_TOKEN"))
     }
 }
-val robotVersion = "0.11.18"
+val robotVersion = "0.11.22"
 dependencies {
     testImplementation(platform("org.junit:junit-bom:5.9.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
