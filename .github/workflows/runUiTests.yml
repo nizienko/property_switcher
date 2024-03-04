@@ -57,9 +57,11 @@ jobs:
       - name: Move video
         if: ${{ failure() }}
         run: mv video build/reports
-
-      - name: Save fails report
-        if: ${{ failure() }}
+      - name: Wait for reports
+        uses: jakejarvis/wait-action@master
+        with:
+          time: '10s'
+      - name: Save reports
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.reportName }}

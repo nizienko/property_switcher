@@ -1,19 +1,30 @@
 import com.intellij.remoterobot.RemoteRobot
-import com.intellij.remoterobot.fixtures.CommonContainerFixture
-import com.intellij.remoterobot.fixtures.ComponentFixture
-import com.intellij.remoterobot.fixtures.ContainerFixture
-import com.intellij.remoterobot.fixtures.component
+import com.intellij.remoterobot.fixtures.*
 import com.intellij.remoterobot.search.locators.byXpath
 import com.intellij.remoterobot.steps.CommonSteps
 import com.intellij.remoterobot.stepsProcessing.step
 import com.intellij.remoterobot.utils.keyboard
 import com.intellij.remoterobot.utils.waitFor
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import java.time.Duration
 
 class CreateSwitchPropertiesTest {
-    private val robot = RemoteRobot("http://127.0.0.1:8082")
-    private val steps = CommonSteps(robot)
+    companion object {
+        private val robot = RemoteRobot("http://127.0.0.1:8082")
+        private val steps = CommonSteps(robot)
+
+        @JvmStatic
+        @AfterAll
+        fun afterAll(): Unit {
+            steps.invokeAction("Exit")
+            robot.idea {
+                find<ContainerFixture>(byXpath("//div[@class='MyDialog']"))
+                    .find<JButtonFixture>(byXpath("//div[@text='Exit']"))
+                    .click()
+            }
+        }
+    }
 
     @Test
     fun createPropSwitchFileTest() {
@@ -21,7 +32,7 @@ class CreateSwitchPropertiesTest {
             robot.welcomeFrame {
                 component(byXpath("//div[(@accessiblename='New Project' and @class='MainButton') or @defaulticon='createNewProjectTab.svg']"))
                     .click()
-                component(byXpath("//div[@class='ProjectTypeListWithSearch']"))
+                component(byXpath("//div[@class='ProjectTypeListWithSearch']"), Duration.ofSeconds(15))
                     .findText("New Project")
                     .click()
                 component(byXpath("//div[contains(@action, 'Kotlin') and @class='SegmentedButton']"))

@@ -2,6 +2,7 @@ plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "1.8.21"
     id("org.jetbrains.intellij") version "1.13.3"
+    jacoco
 }
 
 group = "com.github.nizienko"
@@ -63,6 +64,21 @@ tasks.downloadRobotServerPlugin {
     version.set(robotVersion)
 }
 
+jacoco {
+    toolVersion = "0.8.10"
+    applyTo(tasks.runIdeForUiTests.get())
+}
+
+val uiTestsCoverageReport = tasks.register<JacocoReport>("uiTestsCoverageReport") {
+    executionData(tasks.runIdeForUiTests.get())
+    sourceSets(sourceSets.main.get())
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+}
+
 tasks.runIdeForUiTests {
     systemProperty("robot-server.port", "8082")
     systemProperty("ide.mac.message.dialogs.as.sheets", "false")
@@ -73,11 +89,24 @@ tasks.runIdeForUiTests {
     systemProperty("apple.laf.useScreenMenuBar", "false")
     systemProperty("idea.trust.all.projects", "true")
     systemProperty("ide.show.tips.on.startup.default.value", "false")
+
+    configure<JacocoTaskExtension> {
+
+        // 221+ uses a custom classloader and jacoco fails to find classes
+        isIncludeNoLocationClasses = true
+        excludes = listOf("jdk.internal.*")
+    }
+    finalizedBy(uiTestsCoverageReport)
 }
 
 tasks.test {
     useJUnitPlatform()
     testLogging {
         events("passed", "skipped", "failed")
+    }
+
+    // we need the coverage from Idea process, not from test task
+    configure<JacocoTaskExtension> {
+        isEnabled = false
     }
 }
