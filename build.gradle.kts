@@ -58,6 +58,9 @@ dependencies {
     testImplementation("com.intellij.remoterobot:remote-robot:$robotVersion")
     testImplementation("com.intellij.remoterobot:remote-fixtures:$robotVersion")
     testImplementation("com.squareup.retrofit2:retrofit:2.9.0")
+
+    // Video Recording
+    testImplementation("com.automation-remarks:video-recorder-junit5:2.0")
 }
 
 tasks.downloadRobotServerPlugin {

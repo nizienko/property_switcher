@@ -1,3 +1,4 @@
+import com.automation.remarks.junit5.Video
 import com.intellij.remoterobot.RemoteRobot
 import com.intellij.remoterobot.fixtures.*
 import com.intellij.remoterobot.search.locators.byXpath
@@ -37,6 +38,7 @@ class CreateSwitchPropertiesTest {
         }
     }
 
+    @Video
     @Test
     fun createPropSwitchFileTest() {
         step("Create project") {
@@ -167,7 +169,7 @@ private fun RemoteRobot.runIde() {
             println(line)
         }
     }
-    waitForIgnoringError(Duration.ofSeconds(120)) {
+    waitForIgnoringError(Duration.ofMinutes(10)) {
         findAll(CommonContainerFixture::class.java, byXpath("//div[@class='FlatWelcomeFrame']"))
             .size == 1
     }
