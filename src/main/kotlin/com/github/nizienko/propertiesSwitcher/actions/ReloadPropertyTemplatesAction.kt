@@ -2,10 +2,7 @@ package com.github.nizienko.propertiesSwitcher.actions
 
 import com.github.nizienko.propertiesSwitcher.PropertySwitcherService
 import com.github.nizienko.propertiesSwitcher.fileType.PropertiesTemplateFileType
-import com.intellij.openapi.actionSystem.AnAction
-import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.CommonDataKeys
-import com.intellij.openapi.actionSystem.LangDataKeys
+import com.intellij.openapi.actionSystem.*
 import com.intellij.openapi.components.service
 import com.intellij.openapi.fileEditor.FileDocumentManager
 
@@ -18,6 +15,10 @@ internal class ReloadPropertyTemplatesAction : AnAction() {
 
         val service = project.service<PropertySwitcherService>()
         service.reload()
+    }
+
+    override fun getActionUpdateThread(): ActionUpdateThread {
+        return ActionUpdateThread.BGT
     }
 
     override fun update(event: AnActionEvent) {

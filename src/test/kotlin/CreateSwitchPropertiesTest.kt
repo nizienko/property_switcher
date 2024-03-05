@@ -5,9 +5,14 @@ import com.intellij.remoterobot.steps.CommonSteps
 import com.intellij.remoterobot.stepsProcessing.step
 import com.intellij.remoterobot.utils.keyboard
 import com.intellij.remoterobot.utils.waitFor
+import com.intellij.remoterobot.utils.waitForIgnoringError
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.time.Duration
+import kotlin.concurrent.thread
 
 class CreateSwitchPropertiesTest {
     companion object {
@@ -15,8 +20,14 @@ class CreateSwitchPropertiesTest {
         private val steps = CommonSteps(robot)
 
         @JvmStatic
+        @BeforeAll
+        fun beforeAll() {
+            robot.runIde()
+        }
+
+        @JvmStatic
         @AfterAll
-        fun afterAll(): Unit {
+        fun afterAll() {
             steps.invokeAction("Exit")
             robot.idea {
                 find<ContainerFixture>(byXpath("//div[@class='MyDialog']"))
@@ -78,6 +89,16 @@ class CreateSwitchPropertiesTest {
                     
                 """.trimIndent()
                 )
+                step("Add third parameter") {
+                    textEditor().editor.clickOnOffset(textEditor().editor.text.length)
+                    keyboard {
+                        backspace()
+                        enterText(" # comment")
+                        enter()
+                        enterText("property_3=value_1")
+                        enter()
+                    }
+                }
 
                 step("Switch properties") {
                     widget().click()
@@ -90,7 +111,8 @@ class CreateSwitchPropertiesTest {
                 assert(
                     textEditor().editor.text == """
                     property_1=value_1
-                    property_2=value_3
+                    property_2=value_3 # comment
+                    property_3=value_1
                     
                 """.trimIndent()
                 )
@@ -106,7 +128,8 @@ class CreateSwitchPropertiesTest {
                 assert(
                     textEditor().editor.text == """
                     property_1=value_1
-                    property_2=value_2
+                    property_2=value_2 # comment
+                    property_3=value_1
                     
                 """.trimIndent()
                 )
@@ -134,3 +157,18 @@ private fun ContainerFixture.popup(): ContainerFixture {
 
 private fun CommonContainerFixture.widget(): ComponentFixture =
     component(byXpath("//div[@class='IdeStatusBarImpl']//div[@class='TextPresentationComponent']"))
+
+private fun RemoteRobot.runIde() {
+    thread {
+        val process = Runtime.getRuntime().exec("./gradlew :runIdeForUiTests")
+        val reader = BufferedReader(InputStreamReader(process.inputStream))
+        var line: String?
+        while (reader.readLine().also { line = it } != null) {
+            println(line)
+        }
+    }
+    waitForIgnoringError(Duration.ofSeconds(120)) {
+        findAll(CommonContainerFixture::class.java, byXpath("//div[@class='FlatWelcomeFrame']"))
+            .size == 1
+    }
+}

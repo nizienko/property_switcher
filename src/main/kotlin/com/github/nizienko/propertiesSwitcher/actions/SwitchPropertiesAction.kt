@@ -3,13 +3,13 @@ package com.github.nizienko.propertiesSwitcher.actions
 import com.github.nizienko.propertiesSwitcher.Prop
 import com.github.nizienko.propertiesSwitcher.SwitchablePropertyFile
 import com.github.nizienko.propertiesSwitcher.switcher
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.ui.popup.PopupStep
 import com.intellij.openapi.ui.popup.util.BaseListPopupStep
 import com.intellij.vcs.commit.NonModalCommitPanel.Companion.showAbove
-import java.awt.Component
 import javax.swing.JComponent
 
 internal class SwitchPropertiesAction : AnAction() {
@@ -24,6 +24,10 @@ internal class SwitchPropertiesAction : AnAction() {
         } else {
             popup.showInBestPositionFor(e.dataContext)
         }
+    }
+
+    override fun getActionUpdateThread(): ActionUpdateThread {
+        return ActionUpdateThread.BGT
     }
 
     override fun update(e: AnActionEvent) {
