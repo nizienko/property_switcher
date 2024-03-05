@@ -51,11 +51,13 @@ jobs:
         run: mv video build/reports
 
       - name: Wait for reports
+        if: always()
         uses: jakejarvis/wait-action@master
         with:
           time: '10s'
 
       - name: Save reports
+        if: always()
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.reportName }}
